@@ -1,109 +1,154 @@
-let cards = [];
+let currentLibrary = null;
+let currentVocabSet = null;
+let currentCards = [];
 let currentCardIndex = 0;
 
-const wordElement = document.getElementById('word');
-const phoneticElement = document.getElementById('phonetic');
-const translationElement = document.getElementById('translation');
-const cardElement = document.getElementById('card');
+const mainContent = document.getElementById('main-content');
 
-function loadCards() {
-    fetch('/api/cards')
+function showLibraries() {
+    fetch('/api/libraries')
         .then(response => response.json())
-        .then(data => {
-            cards = data;
-            if (cards.length > 0) {
-                displayCard(currentCardIndex);
-            } else {
-                displayNoCards();
-            }
+        .then(libraries => {
+            let html = '<h2>Your Libraries</h2>';
+            libraries.forEach(library => {
+                html += `<div class="list-item" onclick="showVocabSets(${library.id})">${library.name}</div>`;
+            });
+            html += '<button onclick="showNewLibraryForm()">New Library</button>';
+            mainContent.innerHTML = html;
         });
 }
 
-function displayCard(index) {
-    if (cards.length === 0) {
-        displayNoCards();
+function showNewLibraryForm() {
+    mainContent.innerHTML = `
+        <h2>Create New Library</h2>
+        <input type="text" id="new-library-name" placeholder="Library Name">
+        <button onclick="createNewLibrary()">Create Library</button>
+    `;
+}
+
+function createNewLibrary() {
+    const name = document.getElementById('new-library-name').value;
+    fetch('/api/libraries', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name })
+    })
+    .then(() => showLibraries());
+}
+
+function showVocabSets(libraryId) {
+    currentLibrary = libraryId;
+    fetch(`/api/libraries/${libraryId}/vocab_sets`)
+        .then(response => response.json())
+        .then(vocabSets => {
+            let html = '<h2>Vocab Sets</h2>';
+            vocabSets.forEach(set => {
+                html += `<div class="list-item" onclick="showVocabSetOverview(${set.id})">${set.name} (${set.source_language} - ${set.translation_language})</div>`;
+            });
+            html += '<button onclick="showNewVocabSetForm()">New Vocab Set</button>';
+            html += '<button onclick="showLibraries()">Back to Libraries</button>';
+            mainContent.innerHTML = html;
+        });
+}
+
+function showNewVocabSetForm() {
+    mainContent.innerHTML = `
+        <h2>Create New Vocab Set</h2>
+        <input type="text" id="new-set-name" placeholder="Set Name">
+        <input type="text" id="source-language" placeholder="Source Language">
+        <input type="text" id="translation-language" placeholder="Translation Language">
+        <button onclick="createNewVocabSet()">Create Vocab Set</button>
+    `;
+}
+
+function createNewVocabSet() {
+    const name = document.getElementById('new-set-name').value;
+    const source_language = document.getElementById('source-language').value;
+    const translation_language = document.getElementById('translation-language').value;
+    fetch(`/api/libraries/${currentLibrary}/vocab_sets`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, source_language, translation_language })
+    })
+    .then(() => showVocabSets(currentLibrary));
+}
+
+function showVocabSetOverview(vocabSetId) {
+    currentVocabSet = vocabSetId;
+    fetch(`/api/vocab_sets/${vocabSetId}/cards`)
+        .then(response => response.json())
+        .then(cards => {
+            currentCards = cards;
+            let html = '<h2>Vocab Set Overview</h2>';
+            html += '<table><tr><th>Word</th><th>Phonetic</th><th>Translation</th></tr>';
+            cards.forEach(card => {
+                html += `<tr><td>${card.word}</td><td>${card.phonetic}</td><td>${card.translation}</td></tr>`;
+            });
+            html += '</table>';
+            html += '<button onclick="showNewCardForm()">Add New Card</button>';
+            html += '<button onclick="startReview()">Start Review</button>';
+            html += `<button onclick="showVocabSets(${currentLibrary})">Back to Vocab Sets</button>`;
+            mainContent.innerHTML = html;
+        });
+}
+
+function showNewCardForm() {
+    mainContent.innerHTML = `
+        <h2>Add New Card</h2>
+        <input type="text" id="new-word" placeholder="Word">
+        <input type="text" id="new-phonetic" placeholder="Phonetic">
+        <input type="text" id="new-translation" placeholder="Translation">
+        <button onclick="addNewCard()">Add Card</button>
+    `;
+}
+
+function addNewCard() {
+    const word = document.getElementById('new-word').value;
+    const phonetic = document.getElementById('new-phonetic').value;
+    const translation = document.getElementById('new-translation').value;
+    fetch(`/api/vocab_sets/${currentVocabSet}/cards`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ word, phonetic, translation })
+    })
+    .then(() => showVocabSetOverview(currentVocabSet));
+}
+
+function startReview() {
+    currentCardIndex = 0;
+    showCard();
+}
+
+function showCard() {
+    if (currentCardIndex >= currentCards.length) {
+        mainContent.innerHTML = '<h2>Review Complete!</h2><button onclick="showVocabSetOverview(' + currentVocabSet + ')">Back to Overview</button>';
         return;
     }
-    const card = cards[index];
-    wordElement.textContent = card.word;
-    phoneticElement.textContent = card.phonetic;
-    translationElement.textContent = card.translation;
+    const card = currentCards[currentCardIndex];
+    mainContent.innerHTML = `
+        <div class="card" onclick="flipCard(this)">
+            <div class="card-inner">
+                <div class="card-front">
+                    <h2 id="word">${card.word}</h2>
+                    <p id="phonetic">${card.phonetic}</p>
+                </div>
+                <div class="card-back">
+                    <h2 id="translation">${card.translation}</h2>
+                </div>
+            </div>
+        </div>
+        <button onclick="nextCard()">Next Card</button>
+        <button onclick="showVocabSetOverview(${currentVocabSet})">End Review</button>
+    `;
 }
 
-function displayNoCards() {
-    wordElement.textContent = 'No cards available';
-    phoneticElement.textContent = '';
-    translationElement.textContent = '';
-}
-
-function flipCard() {
+function flipCard(cardElement) {
     cardElement.classList.toggle('flipped');
 }
 
 function nextCard() {
-    if (cards.length === 0) return;
-    currentCardIndex = (currentCardIndex + 1) % cards.length;
-    displayCard(currentCardIndex);
-    cardElement.classList.remove('flipped');
+    currentCardIndex++;
+    showCard();
 }
 
-function prevCard() {
-    if (cards.length === 0) return;
-    currentCardIndex = (currentCardIndex - 1 + cards.length) % cards.length;
-    displayCard(currentCardIndex);
-    cardElement.classList.remove('flipped');
-}
-
-function addCard() {
-    const word = document.getElementById('new-word').value;
-    const phonetic = document.getElementById('new-phonetic').value;
-    const translation = document.getElementById('new-translation').value;
-
-    fetch('/api/cards', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ word, phonetic, translation }),
-    })
-    .then(response => response.json())
-    .then(newCard => {
-        cards.push(newCard);
-        document.getElementById('new-word').value = '';
-        document.getElementById('new-phonetic').value = '';
-        document.getElementById('new-translation').value = '';
-        if (cards.length === 1) {
-            displayCard(0);
-        }
-    });
-}
-
-function deleteCard() {
-    if (cards.length === 0) return;
-
-    const cardId = cards[currentCardIndex].id;
-    fetch(`/api/cards/${cardId}`, {
-        method: 'DELETE',
-    })
-    .then(response => {
-        if (response.ok) {
-            cards.splice(currentCardIndex, 1);
-            if (cards.length === 0) {
-                displayNoCards();
-            } else {
-                currentCardIndex = currentCardIndex % cards.length;
-                displayCard(currentCardIndex);
-            }
-        } else {
-            console.error('Failed to delete card');
-        }
-    });
-}
-
-cardElement.addEventListener('click', flipCard);
-document.getElementById('next-btn').addEventListener('click', nextCard);
-document.getElementById('prev-btn').addEventListener('click', prevCard);
-document.getElementById('add-btn').addEventListener('click', addCard);
-document.getElementById('delete-btn').addEventListener('click', deleteCard);
-
-loadCards();
+showLibraries();
