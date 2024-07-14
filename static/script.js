@@ -2,6 +2,7 @@ let currentLibrary = null;
 let currentVocabSet = null;
 let currentCards = [];
 let currentCardIndex = 0;
+let forgottenCards = [];
 
 const mainContent = document.getElementById('main-content');
 
@@ -11,7 +12,11 @@ function showLibraries() {
         .then(libraries => {
             let html = '<h2>Your Libraries</h2>';
             libraries.forEach(library => {
-                html += `<div class="list-item" onclick="showVocabSets(${library.id})">${library.name}</div>`;
+                html += `
+                    <div class="list-item">
+                        <span onclick="showVocabSets(${library.id})">${library.name}</span>
+                        <button onclick="deleteLibrary(${library.id}, event)">Delete</button>
+                    </div>`;
             });
             html += '<button onclick="showNewLibraryForm()">New Library</button>';
             mainContent.innerHTML = html;
@@ -43,7 +48,11 @@ function showVocabSets(libraryId) {
         .then(vocabSets => {
             let html = '<h2>Vocab Sets</h2>';
             vocabSets.forEach(set => {
-                html += `<div class="list-item" onclick="showVocabSetOverview(${set.id})">${set.name} (${set.source_language} - ${set.translation_language})</div>`;
+                html += `
+                    <div class="list-item">
+                        <span onclick="showVocabSetOverview(${set.id})">${set.name} (${set.source_language} - ${set.target_language})</span>
+                        <button onclick="deleteVocabSet(${set.id}, event)">Delete</button>
+                    </div>`;
             });
             html += '<button onclick="showNewVocabSetForm()">New Vocab Set</button>';
             html += '<button onclick="showLibraries()">Back to Libraries</button>';
@@ -56,7 +65,7 @@ function showNewVocabSetForm() {
         <h2>Create New Vocab Set</h2>
         <input type="text" id="new-set-name" placeholder="Set Name">
         <input type="text" id="source-language" placeholder="Source Language">
-        <input type="text" id="translation-language" placeholder="Translation Language">
+        <input type="text" id="target-language" placeholder="Target Language">
         <button onclick="createNewVocabSet()">Create Vocab Set</button>
     `;
 }
@@ -64,11 +73,11 @@ function showNewVocabSetForm() {
 function createNewVocabSet() {
     const name = document.getElementById('new-set-name').value;
     const source_language = document.getElementById('source-language').value;
-    const translation_language = document.getElementById('translation-language').value;
+    const target_language = document.getElementById('target-language').value;
     fetch(`/api/libraries/${currentLibrary}/vocab_sets`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, source_language, translation_language })
+        body: JSON.stringify({ name, source_language, target_language })
     })
     .then(() => showVocabSets(currentLibrary));
 }
@@ -80,9 +89,15 @@ function showVocabSetOverview(vocabSetId) {
         .then(cards => {
             currentCards = cards;
             let html = '<h2>Vocab Set Overview</h2>';
-            html += '<table><tr><th>Word</th><th>Phonetic</th><th>Translation</th></tr>';
+            html += '<table><tr><th>Word</th><th>Phonetic</th><th>Translation</th><th>Action</th></tr>';
             cards.forEach(card => {
-                html += `<tr><td>${card.word}</td><td>${card.phonetic}</td><td>${card.translation}</td></tr>`;
+                html += `
+                    <tr>
+                        <td>${card.word}</td>
+                        <td>${card.phonetic}</td>
+                        <td>${card.translation}</td>
+                        <td><button onclick="deleteCard(${card.id}, event)">Delete</button></td>
+                    </tr>`;
             });
             html += '</table>';
             html += '<button onclick="showNewCardForm()">Add New Card</button>';
@@ -116,16 +131,21 @@ function addNewCard() {
 
 function startReview() {
     currentCardIndex = 0;
+    forgottenCards = [];
     showCard();
 }
 
 function showCard() {
     if (currentCardIndex >= currentCards.length) {
-        mainContent.innerHTML = '<h2>Review Complete!</h2><button onclick="showVocabSetOverview(' + currentVocabSet + ')">Back to Overview</button>';
+        showReviewResults();
         return;
     }
     const card = currentCards[currentCardIndex];
+    const progress = Math.round(((currentCardIndex + 1) / currentCards.length) * 100);
     mainContent.innerHTML = `
+        <div class="progress-bar">
+            <div class="progress" style="width: ${progress}%"></div>
+        </div>
         <div class="card" onclick="flipCard(this)">
             <div class="card-inner">
                 <div class="card-front">
@@ -137,7 +157,8 @@ function showCard() {
                 </div>
             </div>
         </div>
-        <button onclick="nextCard()">Next Card</button>
+        <button onclick="cardKnown()">Known</button>
+        <button onclick="cardForgotten()">Forgotten</button>
         <button onclick="showVocabSetOverview(${currentVocabSet})">End Review</button>
     `;
 }
@@ -146,9 +167,56 @@ function flipCard(cardElement) {
     cardElement.classList.toggle('flipped');
 }
 
-function nextCard() {
+function cardKnown() {
     currentCardIndex++;
     showCard();
+}
+
+function cardForgotten() {
+    forgottenCards.push(currentCards[currentCardIndex]);
+    currentCardIndex++;
+    showCard();
+}
+
+function showReviewResults() {
+    const knownCount = currentCards.length - forgottenCards.length;
+    const forgottenCount = forgottenCards.length;
+    mainContent.innerHTML = `
+        <h2>Review Complete!</h2>
+        <p>Known cards: ${knownCount}</p>
+        <p>Forgotten cards: ${forgottenCount}</p>
+        <button onclick="reviewForgottenCards()">Review Forgotten Cards</button>
+        <button onclick="showVocabSetOverview(${currentVocabSet})">Back to Overview</button>
+    `;
+}
+
+function reviewForgottenCards() {
+    currentCards = forgottenCards;
+    startReview();
+}
+
+function deleteLibrary(libraryId, event) {
+    event.stopPropagation();
+    if (confirm('Are you sure you want to delete this library?')) {
+        fetch(`/api/libraries/${libraryId}`, { method: 'DELETE' })
+            .then(() => showLibraries());
+    }
+}
+
+function deleteVocabSet(vocabSetId, event) {
+    event.stopPropagation();
+    if (confirm('Are you sure you want to delete this vocab set?')) {
+        fetch(`/api/vocab_sets/${vocabSetId}`, { method: 'DELETE' })
+            .then(() => showVocabSets(currentLibrary));
+    }
+}
+
+function deleteCard(cardId, event) {
+    event.stopPropagation();
+    if (confirm('Are you sure you want to delete this card?')) {
+        fetch(`/api/cards/${cardId}`, { method: 'DELETE' })
+            .then(() => showVocabSetOverview(currentVocabSet));
+    }
 }
 
 showLibraries();

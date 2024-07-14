@@ -76,3 +76,21 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
     app.run(debug=True)
+
+@app.route('/api/libraries/<int:library_id>', methods=['DELETE'])
+def delete_library(library_id):
+    library = Library.query.get(library_id)
+    if library:
+        db.session.delete(library)
+        db.session.commit()
+        return '', 204
+    return jsonify({'error': 'Library not found'}), 404
+
+@app.route('/api/vocab_sets/<int:vocab_set_id>', methods=['DELETE'])
+def delete_vocab_set(vocab_set_id):
+    vocab_set = VocabSet.query.get(vocab_set_id)
+    if vocab_set:
+        db.session.delete(vocab_set)
+        db.session.commit()
+        return '', 204
+    return jsonify({'error': 'Vocab set not found'}), 404
