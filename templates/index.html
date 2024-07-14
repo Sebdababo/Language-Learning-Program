@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocab Cards</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div id="app">
+        <h1>Vocab Cards</h1>
+        <div id="card-container">
+            <div id="card" class="card">
+                <div class="card-inner">
+                    <div class="card-front">
+                        <h2 id="word"></h2>
+                        <p id="phonetic"></p>
+                    </div>
+                    <div class="card-back">
+                        <h2 id="translation"></h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="controls">
+            <button id="prev-btn">Previous</button>
+            <button id="flip-btn">Flip</button>
+            <button id="next-btn">Next</button>
+            <button id="delete-btn">Delete Card</button>
+        </div>
+        <div id="add-card-form">
+            <h2>Add New Card</h2>
+            <input type="text" id="new-word" placeholder="Word" required>
+            <input type="text" id="new-phonetic" placeholder="Phonetic (optional)">
+            <input type="text" id="new-translation" placeholder="Translation" required>
+            <button id="add-btn">Add Card</button>
+        </div>
+    </div>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
