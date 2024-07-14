@@ -100,7 +100,7 @@ function deleteCard() {
     });
 }
 
-document.getElementById('flip-btn').addEventListener('click', flipCard);
+cardElement.addEventListener('click', flipCard);
 document.getElementById('next-btn').addEventListener('click', nextCard);
 document.getElementById('prev-btn').addEventListener('click', prevCard);
 document.getElementById('add-btn').addEventListener('click', addCard);
