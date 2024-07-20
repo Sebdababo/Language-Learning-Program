@@ -1,10 +1,15 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
     font-family: 'Roboto', sans-serif;
     display: flex;
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    margin: 0;
     background-color: #1a2a3a;
     color: #ffffff;
 }
@@ -17,7 +22,7 @@ body {
 }
 
 h1 {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 2rem;
 }
 
@@ -27,7 +32,8 @@ h2 {
 }
 
 .card {
-    width: 400px;
+    width: 100%;
+    max-width: 400px;
     height: 250px;
     perspective: 1000px;
     margin: 40px auto;
@@ -96,7 +102,8 @@ input, select {
     display: block;
     margin: 10px auto;
     padding: 10px;
-    width: 300px;
+    width: 100%;
+    max-width: 300px;
     font-size: 1.2rem;
     border: none;
     border-radius: 5px;
@@ -115,6 +122,9 @@ input::placeholder {
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .list-item:hover {
@@ -143,21 +153,68 @@ th {
     background-color: #34495e;
     border-radius: 10px;
     margin-bottom: 20px;
+    overflow: hidden;
 }
 
 .progress {
     height: 100%;
     background-color: #2ecc71;
-    border-radius: 10px;
     transition: width 0.3s ease-in-out;
 }
 
-.list-item {
+.pagination {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
+    justify-content: center;
+    margin-top: 20px;
 }
 
-.list-item button {
-    margin-left: 10px;
+.pagination button {
+    margin: 0 5px;
+}
+
+.feedback {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-weight: bold;
+    z-index: 1000;
+}
+
+.feedback.success {
+    background-color: #2ecc71;
+}
+
+.feedback.error {
+    background-color: #e74c3c;
+}
+
+@media (max-width: 768px) {
+    #app {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    h2 {
+        font-size: 1.5rem;
+    }
+
+    .card {
+        height: 200px;
+    }
+
+    button {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+
+    table {
+        font-size: 0.9rem;
+    }
 }
