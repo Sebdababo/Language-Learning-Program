@@ -1,20 +1,20 @@
-## Language Learning Program
+# Language Learning Program
 
-### Overview
+## Overview
 This Language Learning Program is a web application designed to help users learn new languages through vocabulary sets and flashcards. It allows users to create libraries, add vocabulary sets to these libraries, and use interactive flashcards for effective learning.
 
-### Features
+## Features
 - **Library Management**: Create, view, and delete libraries.
 - **Vocabulary Sets**: Add, view, and delete vocabulary sets within libraries.
 - **Flashcards**: Interactive flashcards for reviewing vocabulary.
 - **Progress Tracking**: Monitor your progress and review forgotten cards.
 - **Data Export/Import**: Export and import vocabulary data in JSON format.
 
-### Technologies Used
+## Technologies Used
 - **Backend**: Python (Flask)
 - **Frontend**: HTML, CSS, JavaScript
 
-### Installation
+## Installation
 
 1. **Clone the repository:**
     ```
@@ -35,7 +35,7 @@ This Language Learning Program is a web application designed to help users learn
 4. **Access the application:**
     Open your web browser and go to `http://localhost:5000`.
    
-### API Endpoints
+## API Endpoints
 - **GET /api/libraries**: Fetch all libraries.
 - **POST /api/libraries**: Create a new library.
 - **DELETE /api/libraries/:id**: Delete a library by ID.
@@ -49,7 +49,7 @@ This Language Learning Program is a web application designed to help users learn
 - **GET /api/export**: Export data.
 - **POST /api/import**: Import data.
 
-### Usage
+## Usage
 
 1. **Create a Library:**
     - Go to the "Libraries" section.
@@ -75,6 +75,14 @@ This Language Learning Program is a web application designed to help users learn
     - Click "Export Data" to download your data.
     - Click "Import Data" to upload data from a JSON file.
 
-### Customization
+## Customization
 - **Styling**: Modify `styles.css` to change the appearance of the application.
 - **Functionality**: Update `script.js` to enhance or change the behavior of the application.
+
+## Example Usage
+
+
+![LLP output 4](https://github.com/user-attachments/assets/230112aa-f0c5-4e43-a10a-b2f7536d4670)
+![LLP output 3](https://github.com/user-attachments/assets/fed061f7-d28e-4faf-822e-371c35ecf177)
+![LLP output 2](https://github.com/user-attachments/assets/9689cc83-665e-4925-aa16-4e939c83e58a)
+![LLP output 1](https://github.com/user-attachments/assets/416c0e8e-7c97-42ff-8781-8892c5c5548e)
